@@ -9,20 +9,19 @@ const User = require('./models/UserModel');
 const CategorieQuiz = require('./models/CategorieQuizModel');
 const ResultatQuiz = require('./models/ResultatQuizModel');
 const serviceAccount = {
-  
-    "type": "service_account",
-    "project_id": "miawodo-c5be2",
-    "private_key_id": "cd1a59cdd4d9113ab5f4351f9992318ed342712e",
-    "private_key": "process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')", // Gère les retours à la ligne
-    "client_email": "firebase-adminsdk-fbsvc@miawodo-c5be2.iam.gserviceaccount.com",
-    "client_id": "117892011576494679572",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40miawodo-c5be2.iam.gserviceaccount.com",
-    "universe_domain": "googleapis.com"
-  
+  type: process.env.FIREBASE_TYPE || "service_account",
+  project_id: process.env.FIREBASE_PROJECT_ID || "miawodo-c5be2",
+  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID || "cd1a59cdd4d9113ab5f4351f9992318ed342712e",
+  private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Évaluation correcte
+  client_email: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@miawodo-c5be2.iam.gserviceaccount.com",
+  client_id: process.env.FIREBASE_CLIENT_ID || "117892011576494679572",
+  auth_uri: process.env.FIREBASE_AUTH_URI || "https://accounts.google.com/o/oauth2/auth",
+  token_uri: process.env.FIREBASE_TOKEN_URI || "https://oauth2.googleapis.com/token",
+  auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL || "https://www.googleapis.com/oauth2/v1/certs",
+  client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL || "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40miawodo-c5be2.iam.gserviceaccount.com",
+  universe_domain: "googleapis.com"
 };
+
 const cors = require('cors');
 const multer = require('multer');
 //const videoRoutes = require('./routes/videoRoutes'); // Si tu as un fichier séparé pour les routes
