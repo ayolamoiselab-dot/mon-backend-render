@@ -57,10 +57,11 @@ const wss = new WebSocket.Server({ server });
 
 // Middlewares
 // Configuration CORS
+// Configuration CORS permissive (pour test)
 app.use(cors({
-  origin: ['http://localhost', 'https://mon-backend-qx9l.onrender.com'], // Ajoute les origines autorisées
-  methods: ['GET', 'POST', 'OPTIONS'], // Méthodes HTTP autorisées
-  allowedHeaders: ['Content-Type'], // En-têtes autorisés
+  origin: '*', // Autorise toutes les origines
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
 }));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -152,7 +153,7 @@ app.post('/send-email', async (req, res) => {
     });
 
     let mailOptions = {
-      from: `"Edu Hub" <${process.env.GMAIL_USER}>`,
+      from: `"Miawodoo" <${process.env.GMAIL_USER}>`,
       to: to,
       subject: 'Votre code OTP',
       text: `Bonjour,\n\nVotre code OTP est : ${otp}\n\nMerci d'utiliser Edu Hub.`,
