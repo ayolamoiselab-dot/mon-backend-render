@@ -126,26 +126,15 @@ wss.on('connection', (ws) => {
 });
 
 
-// Route 1 : Envoyer OTP par email avec vérification reCAPTCHA
+// Route : Envoyer OTP par email (sans reCAPTCHA)
 app.post('/send-email', async (req, res) => {
-  const { to, recaptchaToken } = req.body;
-  
-  if (!to) return res.status(400).json({ error: "Email requis." });
-  if (!recaptchaToken) return res.status(400).json({ error: "Token reCAPTCHA requis." });
+  const { to, otp } = req.body;
 
-  try {
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-    const verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaToken}`;
-    const recaptchaResponse = await axios.post(verificationUrl);
-    if (!recaptchaResponse.data.success) {
-      return res.status(400).json({ error: "La vérification reCAPTCHA a échoué." });
-    }
-  } catch (error) {
-    console.error("Erreur lors de la vérification reCAPTCHA :", error);
-    return res.status(500).json({ error: "Erreur lors de la vérification reCAPTCHA." });
+  if (!to || !otp) {
+    return res.status(400).json({ error: "Email et OTP sont requis." });
   }
 
-  const otp = Math.floor(100000 + Math.random() * 900000);
+  // Stocke l’OTP pour vérification ultérieure
   otpStorage[to] = otp;
 
   try {
@@ -1110,4 +1099,4 @@ app.post('/api/upload-video-file', upload.single('video'), async (req, res) => {
 
 // Démarrer le serveur
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Serveur démarré sur le port ${PORT}`));
