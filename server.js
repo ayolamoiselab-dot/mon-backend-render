@@ -56,7 +56,12 @@ const server = require('http').createServer(app);
 const wss = new WebSocket.Server({ server });
 
 // Middlewares
-app.use(cors());
+// Configuration CORS
+app.use(cors({
+  origin: ['http://localhost', 'https://mon-backend-qx9l.onrender.com'], // Ajoute les origines autorisées
+  methods: ['GET', 'POST', 'OPTIONS'], // Méthodes HTTP autorisées
+  allowedHeaders: ['Content-Type'], // En-têtes autorisés
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 //app.use('/api', videoRoutes);
