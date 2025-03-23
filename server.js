@@ -132,7 +132,7 @@ wss.on('connection', (ws) => {
 });
 
 
-// Route : Envoyer OTP par email (sans reCAPTCHA)
+// Route : Envoyer OTP par email
 app.post('/send-email', async (req, res) => {
   const { to, otp } = req.body;
 
@@ -140,8 +140,9 @@ app.post('/send-email', async (req, res) => {
     return res.status(400).json({ error: "Email et OTP sont requis." });
   }
 
-  // Stocke l’OTP pour vérification ultérieure
-  otpStorage[to] = otp;
+  // Stocke l’OTP comme chaîne (pas de conversion ici)
+  otpStorage[to] = { value: otp, timestamp: Date.now() };
+  console.log(`OTP stocké pour ${to} : ${otpStorage[to]} (type: ${typeof otpStorage[to]})`);
 
   try {
     let transporter = nodemailer.createTransport({
@@ -176,7 +177,7 @@ app.post('/verify-otp', async (req, res) => {
     return res.status(400).json({ error: "Tous les champs sont requis." });
   }
 
-  if (otpStorage[email] !== parseInt(otp)) {
+  if (!otpStorage[email] || otpStorage[email].value !== otp || (Date.now() - otpStorage[email].timestamp > 600000)) { // 10 min
     return res.status(400).json({ error: "OTP invalide ou expiré." });
   }
 
