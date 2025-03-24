@@ -502,23 +502,41 @@ app.post('/update-user', async (req, res) => {
 });
 
 // Endpoint pour enregistrer une ressource pédagogique
+// Route pour enregistrer une ressource pédagogique
 app.post('/upload-resource', upload.single('file'), async (req, res) => {
-  const { type, title, description, domain, isPaid, price, uploadedBy, courseId } = req.body;
-  if (!type || !title || !description || !domain || !uploadedBy) {
-    return res.status(400).json({ error: "Tous les champs requis doivent être renseignés." });
+  const { type, title, description, domain, isPaid, price, uploadedBy } = req.body;
+  if (!type || !title || !description || !domain || !uploadedBy || !req.file) {
+    return res.status(400).json({ error: "Tous les champs requis doivent être renseignés, y compris le fichier." });
   }
 
   const paid = isPaid === 'true';
   const resourcePrice = paid ? Number(price) : 0;
   let resourceId;
+  let fileUrl = null;
+  let thumbnail = null;
 
   try {
+    // Upload du fichier sur Cloudinary pour tous les types
+    const filePath = req.file.path;
+    const uploadResponse = await cloudinary.uploader.upload(filePath, {
+      resource_type: 'auto', // Détecte automatiquement le type (image, vidéo, PDF, etc.)
+      access_mode: 'public',
+      folder: `edu_hub_resources/${type.toLowerCase()}`,
+    });
+    fileUrl = uploadResponse.secure_url;
+    thumbnail = uploadResponse.thumbnail_url || fileUrl; // Si disponible, sinon même URL
+
+    console.log(`✅ Fichier uploadé sur Cloudinary : ${fileUrl}`);
+
+    // Gestion selon le type de ressource
     if (type === 'Cours') {
       const courseData = {
         title,
         description,
         domain,
         teacherId: uploadedBy,
+        fileUrl, // Ajout du lien fichier
+        thumbnail,
         isPaid: paid,
         price: resourcePrice,
         createdAt: new Date(),
@@ -527,19 +545,12 @@ app.post('/upload-resource', upload.single('file'), async (req, res) => {
       const courseRef = await db.collection('courses').add(courseData);
       resourceId = courseRef.id;
     } else if (type === 'Document') {
-      if (!req.file) return res.status(400).json({ error: "Fichier requis pour un document." });
-      const filePath = req.file.path;
-      const uploadResponse = await cloudinary.uploader.upload(filePath, {
-        resource_type: 'auto',
-        access_mode: 'public', // Force l'accès public
-      });
-      console.log(`✅ Document uploadé sur Cloudinary : ${uploadResponse.secure_url}`);
       const documentData = {
         title,
         description,
         domain,
-        fileUrl: uploadResponse.secure_url,
-        thumbnail: uploadResponse.secure_url,
+        fileUrl,
+        thumbnail,
         uploadedBy,
         isPaid: paid,
         price: resourcePrice,
@@ -553,7 +564,9 @@ app.post('/upload-resource', upload.single('file'), async (req, res) => {
         title,
         content: description,
         domain,
-        courseId: courseId || null,
+        fileUrl, // Ajout du lien fichier
+        thumbnail,
+        uploadedBy,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -565,6 +578,7 @@ app.post('/upload-resource', upload.single('file'), async (req, res) => {
 
     console.log(`✅ Ressource ${type} créée avec ID: ${resourceId}`);
 
+    // Notification aux étudiants
     const studentsQuery = await db.collection('users')
       .where('role', 'in', ['Etudiant', 'Autodidacte'])
       .where('preferredDomains', 'array-contains', domain)
@@ -584,7 +598,10 @@ app.post('/upload-resource', upload.single('file'), async (req, res) => {
       }, { merge: true });
     }
 
-    return res.status(200).json({ message: `${type} créé avec succès.` });
+    // Nettoyage du fichier temporaire
+    require('fs').unlinkSync(filePath);
+
+    return res.status(200).json({ message: `${type} créé avec succès.`, fileUrl });
   } catch (error) {
     console.error("❌ Erreur lors de l'enregistrement de la ressource:", error);
     return res.status(500).json({ error: "Erreur lors de l'enregistrement de la ressource." });
